@@ -76,8 +76,21 @@
                         @else
                             <!-- Rounded account circle -->
                             <a href="{{ route('account.profile') }}"
-                                class="profile-circle d-flex align-items-center justify-content-center">
-                                <i class="fas fa-user"></i>
+                                class="d-flex align-items-center text-decoration-none">
+                                @if (Auth::user()->role == 'user')
+                                    <span
+                                        class="me-2 fw-bold text-dark">{{ explode(' ', Auth::user()->name)[0] }}</span>
+                                @endif
+                                @if (Auth::user()->image)
+                                    <img src="{{ Auth::user()->image }}" alt="avatar"
+                                        class="rounded-circle border border-1 border-secondary"
+                                        style="width: 40px; height: 40px; object-fit: cover;">
+                                @else
+                                    <div class="profile-circle d-flex align-items-center justify-content-center rounded-circle bg-light border"
+                                        style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-secondary"></i>
+                                    </div>
+                                @endif
                             </a>
                         @endif
 
@@ -104,7 +117,8 @@
                     <form id="profilePicForm" name="profilePicForm" action="" method="post">
                         <div class="mb-4">
                             <label for="image" class="form-label">Select New Profile Image</label>
-                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                            <input type="file" class="form-control" id="image" name="image"
+                                accept="image/*">
                             <p class="text-danger small mt-2 mb-0" id="image-error"></p>
                         </div>
                         <div class="d-flex justify-content-end gap-2">
@@ -121,48 +135,9 @@
         </div>
     </div>
 
-    <footer class="bg-white border-top mt-auto">
-        <div class="container">
-            <div class="row py-4">
-                <div class="col-md-4 mb-3 mb-md-0">
-                    <h5 class="fw-bold text-primary mb-3">
-                        <i class="fas fa-briefcase me-2"></i>Lokerin
-                    </h5>
-                    <p class="text-muted small mb-0">Find your dream job and build your career with us.</p>
-                </div>
-                <div class="col-md-4 mb-3 mb-md-0">
-                    <h6 class="fw-bold mb-3">Quick Links</h6>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><a href="{{ route('home') }}"
-                                class="text-decoration-none text-muted small"><i class="fas fa-angle-right me-1"></i>
-                                Home</a></li>
-                        <li class="mb-2"><a href="{{ route('jobs') }}"
-                                class="text-decoration-none text-muted small"><i class="fas fa-angle-right me-1"></i>
-                                Find Jobs</a></li>
-                        <li class="mb-2"><a href="{{ route('account.createJob') }}"
-                                class="text-decoration-none text-muted small"><i class="fas fa-angle-right me-1"></i>
-                                Post a Job</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h6 class="fw-bold mb-3">Connect With Us</h6>
-                    <div class="d-flex gap-2">
-                        <a href="#" class="btn btn-sm btn-outline-primary"><i
-                                class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="btn btn-sm btn-outline-primary"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="btn btn-sm btn-outline-primary"><i
-                                class="fab fa-linkedin-in"></i></a>
-                        <a href="#" class="btn btn-sm btn-outline-primary"><i class="fab fa-instagram"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="row border-top pt-3">
-                <div class="col text-center">
-                    <p class="text-muted small mb-0">© 2025 Lokerin. All Rights Reserved.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
+    @if (!isset($hideFooter))
+        @include('front.layouts.footer')
+    @endif
 
     <script src="{{ asset('assets/js/jquery-3.6.0.min.js') }}"></script>
     <script src="{{ asset('assets/js/bootstrap.bundle.5.1.3.min.js') }}"></script>
@@ -203,6 +178,10 @@
                     } else {
                         window.location.href = '{{ url()->current() }}';
                     }
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                    alert("An error occurred while uploading the image. Please try again.");
                 }
             });
         });

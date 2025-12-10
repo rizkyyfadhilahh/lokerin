@@ -22,7 +22,7 @@
 
                     <!-- Profile Information Card -->
                     <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                        <form action="" method="post" id="userForm" name="userForm">
+                        <form action="" method="post" id="userForm" name="userForm" enctype="multipart/form-data">
                             <div class="card-body p-4">
                                 <h4 class="fw-bold mb-4">
                                     <i class="fas fa-user-edit text-primary me-2"></i>My Profile
@@ -51,6 +51,20 @@
                                         <input type="text" name="mobile" id="mobile"
                                             placeholder="Enter mobile number" class="form-control"
                                             value="{{ $user->mobile }}">
+                                    </div>
+                                    <div class="col-md-6 mb-4">
+                                        <label for="cv" class="form-label fw-semibold">CV (PDF) *</label>
+                                        <input type="file" name="cv" id="cv" class="form-control"
+                                            accept="application/pdf">
+                                        @if ($user->cv)
+                                            <div class="col-md-6 mt-2">
+                                                <a href="{{ route('account.downloadCv') }}" target="_blank"
+                                                    class="btn btn-primary px-3 py-1">
+                                                    View CV
+                                                </a>
+                                            </div>
+                                        @endif
+                                        <p class="text-danger small mt-1"></p>
                                     </div>
                                 </div>
                             </div>
@@ -110,11 +124,16 @@
         $("#userForm").submit(function(e) {
             e.preventDefault();
 
+            var formData = new FormData(this);
+            formData.append('_method', 'PUT');
+
             $.ajax({
                 url: '{{ route('account.updateProfile') }}',
-                type: 'put',
+                type: 'post',
                 dataType: 'json',
-                data: $("#userForm").serializeArray(),
+                data: formData,
+                contentType: false,
+                processData: false,
                 success: function(response) {
 
                     if (response.status == true) {
@@ -153,6 +172,18 @@
                                 .html(errors.email)
                         } else {
                             $("#email").removeClass('is-invalid')
+                                .siblings('p')
+                                .removeClass('invalid-feedback')
+                                .html('')
+                        }
+
+                        if (errors.cv) {
+                            $("#cv").addClass('is-invalid')
+                                .siblings('p')
+                                .addClass('invalid-feedback')
+                                .html(errors.cv)
+                        } else {
+                            $("#cv").removeClass('is-invalid')
                                 .siblings('p')
                                 .removeClass('invalid-feedback')
                                 .html('')

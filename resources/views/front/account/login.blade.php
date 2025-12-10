@@ -76,10 +76,6 @@
                                             Remember me
                                         </label>
                                     </div>
-                                    <a href="{{ route('account.forgotPassword') }}"
-                                        class="text-primary text-decoration-none small">
-                                        Forgot Password?
-                                    </a>
                                 </div>
 
                                 <button type="submit" class="btn btn-primary w-100 py-3 mb-3">

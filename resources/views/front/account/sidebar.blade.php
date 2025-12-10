@@ -3,7 +3,7 @@
     <div class="card-body p-4 text-center">
         <div class="position-relative d-inline-block mb-3">
             @if (Auth::user()->image != '')
-                <img src="{{ asset('profile_pic/thumb/' . Auth::user()->image) }}" alt="avatar"
+                <img src="{{ Auth::user()->image }}" alt="avatar"
                     class="rounded-circle img-fluid border border-3 border-primary"
                     style="width: 120px; height: 120px; object-fit: cover;">
             @else

@@ -108,6 +108,7 @@
                                                     <th class="fw-semibold">Email</th>
                                                     <th class="fw-semibold">Mobile</th>
                                                     <th class="fw-semibold">Applied Date</th>
+                                                    <th class="fw-semibold">Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -128,15 +129,25 @@
                                                             <td class="text-muted">
                                                                 {{ $application->user->mobile ?? 'N/A' }}</td>
                                                             <td>
-                                                                <span class="badge bg-primary bg-opacity-10 text-primary">
+                                                                <span class="badge bg-primary bg-opacity-10 text-light p-3">
                                                                     {{ \Carbon\Carbon::parse($application->applied_date)->format('d M, Y') }}
                                                                 </span>
+                                                            </td>
+                                                            <td>
+                                                                @if ($application->user->cv)
+                                                                    <a href="{{ route('downloadApplicantCv', $application->id) }}"
+                                                                        target="_blank" class="btn btn-sm btn-primary">
+                                                                        <i class="fas fa-eye me-1"></i>View CV
+                                                                    </a>
+                                                                @else
+                                                                    <span class="text-muted small">No CV</span>
+                                                                @endif
                                                             </td>
                                                         </tr>
                                                     @endforeach
                                                 @else
                                                     <tr>
-                                                        <td colspan="4" class="text-center text-muted py-4">
+                                                        <td colspan="5" class="text-center text-muted py-4">
                                                             <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
                                                             No applicants yet
                                                         </td>

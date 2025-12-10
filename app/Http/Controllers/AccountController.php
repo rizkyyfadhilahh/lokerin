@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\ResetPasswordEmail;
 use App\Models\Category;
 use App\Models\Job;
 use App\Models\JobApplication;
@@ -23,7 +22,7 @@ class AccountController extends Controller
 {
     // This method will show user registration page
     public function registration() {
-        return view('front.account.registration');
+        return view('front.account.registration', ['hideFooter' => true]);
     }
 
     // This method will save a user
@@ -61,7 +60,7 @@ class AccountController extends Controller
 
     // This method will show user login page
     public function login() {
-        return view('front.account.login');
+        return view('front.account.login',  ['hideFooter' => true]);
     }
 
     public function authenticate(Request $request) {
@@ -84,15 +83,14 @@ class AccountController extends Controller
         }
     }
 
-    public function profile() {
-
-        
+    public function profile() {        
         $id = Auth::user()->id;
 
         $user = User::where('id',$id)->first();
 
         return view('front.account.profile',[
-            'user' => $user
+            'user' => $user,
+            'hideFooter' => true
         ]);
     }
 
@@ -102,7 +100,8 @@ class AccountController extends Controller
 
         $validator = Validator::make($request->all(),[
             'name' => 'required|min:5|max:20',
-            'email' => 'required|email|unique:users,email,'.$id.',id'
+            'email' => 'required|email|unique:users,email,'.$id.',id',
+            'cv' => 'nullable|file|mimes:pdf|max:2048'
         ]);
 
 
@@ -113,6 +112,21 @@ class AccountController extends Controller
             $user->email = $request->email;
             $user->mobile = $request->mobile;
             $user->designation = $request->designation;
+
+            // Handle CV Upload
+            if ($request->hasFile('cv')) {
+                
+                // Delete old CV
+                if ($user->cv && File::exists(public_path('storage/'.$user->cv))) {
+                    File::delete(public_path('storage/'.$user->cv));
+                }
+
+                $file = $request->file('cv');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $file->storeAs('public/cvs', $filename);
+                $user->cv = 'cvs/' . $filename;
+            }
+
             $user->save();
 
             session()->flash('success','Profile updated successfully.');
@@ -129,6 +143,23 @@ class AccountController extends Controller
             ]);
         }
 
+    }
+
+    public function downloadCv() {
+        $id = Auth::user()->id;
+        $user = User::where('id',$id)->first();
+        
+        if ($user->cv == null) {
+            return redirect()->route('account.profile')->with('error', 'CV not found');
+        }
+
+        $filePath = storage_path('app/public/' . $user->cv);
+        
+        if (!File::exists($filePath)) {
+             return redirect()->route('account.profile')->with('error', 'CV file not found');
+        }
+
+        return response()->file($filePath);
     }
 
     public function logout() {
@@ -148,25 +179,12 @@ class AccountController extends Controller
         if ($validator->passes()) {
 
             $image = $request->image;
-            $ext = $image->getClientOriginalExtension();
-            $imageName = $id.'-'.time().'.'.$ext;
-            $image->move(public_path('/profile_pic/'), $imageName);
+            
+            // Read file contents and convert to Base64
+            $imageData = file_get_contents($image->getRealPath());
+            $base64 = 'data:' . $image->getClientMimeType() . ';base64,' . base64_encode($imageData);
 
-
-            // Create a small thumbnail
-            $sourcePath = public_path('/profile_pic/'.$imageName);
-            $manager = new ImageManager(Driver::class);
-            $image = $manager->read($sourcePath);
-
-            // crop the best fitting 5:3 (600x360) ratio and resize to 600x360 pixel
-            $image->cover(150, 150);
-            $image->toPng()->save(public_path('/profile_pic/thumb/'.$imageName));
-
-            // Delete Old Profile Pic
-            File::delete(public_path('/profile_pic/thumb/'.Auth::user()->image));
-            File::delete(public_path('/profile_pic/'.Auth::user()->image));
-
-            User::where('id',$id)->update(['image' => $imageName]);
+            User::find($id)->update(['image' => $base64]);
 
             session()->flash('success','Profile picture updated successfully.');
 
@@ -192,6 +210,7 @@ class AccountController extends Controller
         return view('front.account.job.create',[
             'categories' =>  $categories,
             'jobTypes' =>  $jobTypes,
+            'hideFooter' => true
         ]);
     }
 
@@ -457,80 +476,6 @@ class AccountController extends Controller
         return response()->json([
             'status' => true                
         ]);
-
-    }
-
-    public function forgotPassword() {
-        return view('front.account.forgot-password');
-    }
-
-    public function processForgotPassword(Request $request) {
-        $validator = Validator::make($request->all(),[
-            'email' => 'required|email|exists:users,email'
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->route('account.forgotPassword')->withInput()->withErrors($validator);
-        }
-
-        $token = Str::random(60);
-
-        \DB::table('password_reset_tokens')->where('email',$request->email)->delete();
-
-        \DB::table('password_reset_tokens')->insert([
-            'email' => $request->email,
-            'token' => $token,
-            'created_at' => now()
-        ]);
-
-        // Send Email here
-        $user = User::where('email',$request->email)->first();
-        $mailData =  [
-            'token' => $token,
-            'user' => $user,
-            'subject' => 'You have requested to change your password.'
-        ];
-
-        Mail::to($request->email)->send(new ResetPasswordEmail($mailData));
-
-        return redirect()->route('account.forgotPassword')->with('success','Reset password email has been sent to your inbox.');
-        
-    }
-
-    public function resetPassword($tokenString) {
-        $token = \DB::table('password_reset_tokens')->where('token',$tokenString)->first();
-
-        if ($token == null) {
-            return redirect()->route('account.forgotPassword')->with('error','Invalid token.');
-        }
-
-        return view('front.account.reset-password',[
-            'tokenString' => $tokenString
-        ]);
-    }
-
-    public function processResetPassword(Request $request) {
-
-        $token = \DB::table('password_reset_tokens')->where('token',$request->token)->first();
-
-        if ($token == null) {
-            return redirect()->route('account.forgotPassword')->with('error','Invalid token.');
-        }
-        
-        $validator = Validator::make($request->all(),[
-            'new_password' => 'required|min:5',
-            'confirm_password' => 'required|same:new_password',
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->route('account.resetPassword',$request->token)->withErrors($validator);
-        }
-
-        User::where('email',$token->email)->update([
-            'password' => Hash::make($request->new_password)
-        ]);
-
-        return redirect()->route('account.login')->with('success','You have successfully changed your password.');
 
     }
 }

@@ -176,25 +176,25 @@
                                     </p>
 
                                     <div class="mb-4">
-                                        <div class="d-flex align-items-center mb-2 job-meta">
+                                        <div class="d-flex align-items-center mb-2">
                                             <div class="icon-wrapper me-2 d-flex align-items-center justify-content-center"
                                                 style="width: 32px; height: 32px; background: #dbeafe; border-radius: 8px;">
                                                 <i class="fas fa-map-marker-alt text-primary"
                                                     style="font-size: 0.875rem;"></i>
                                             </div>
-                                            <span class="text-muted"
-                                                style="font-size: 0.9rem;">{{ $featuredJob->location }}</span>
+                                            <span class="text-black"
+                                                style="font-size: 0.9rem; font-weight: 600;">{{ $featuredJob->location }}</span>
                                         </div>
-                                        <div class="d-flex align-items-center mb-2 job-meta">
+                                        <div class="d-flex align-items-center mb-2">
                                             <div class="icon-wrapper me-2 d-flex align-items-center justify-content-center"
                                                 style="width: 32px; height: 32px; background: #dbeafe; border-radius: 8px;">
                                                 <i class="fas fa-clock text-primary" style="font-size: 0.875rem;"></i>
                                             </div>
-                                            <span class="badge bg-primary bg-opacity-10 text-primary"
-                                                style="font-weight: 600;">{{ $featuredJob->jobType->name }}</span>
+                                            <span class="text-black"
+                                                style="font-size: 0.9rem; font-weight: 600;">{{ $featuredJob->jobType->name }}</span>
                                         </div>
                                         @if (!is_null($featuredJob->salary))
-                                            <div class="d-flex align-items-center job-meta">
+                                            <div class="d-flex align-items-center">
                                                 <div class="icon-wrapper me-2 d-flex align-items-center justify-content-center"
                                                     style="width: 32px; height: 32px; background: #d1fae5; border-radius: 8px;">
                                                     <i class="fas fa-dollar-sign text-success"

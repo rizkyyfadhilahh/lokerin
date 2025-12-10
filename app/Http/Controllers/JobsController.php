@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\JobNotificationEmail;
 use App\Models\Category;
 use App\Models\Job;
 use App\Models\JobApplication;
@@ -70,7 +69,8 @@ class JobsController extends Controller
             'categories' => $categories,
             'jobTypes' => $jobTypes,
             'jobs' => $jobs,
-            'jobTypeArray' => $jobTypeArray
+            'jobTypeArray' => $jobTypeArray,
+            'hideFooter' => true
         ]);
     }
 
@@ -102,7 +102,8 @@ class JobsController extends Controller
 
         return view('front.jobDetail',[ 'job' => $job,
                                         'count' => $count,
-                                        'applications' => $applications
+                                        'applications' => $applications,
+                                        'hideFooter' => true
                                     ]);
     }
 
@@ -155,18 +156,6 @@ class JobsController extends Controller
         $application->applied_date = now();
         $application->save();
 
-
-        // Send Notification Email to Employer
-        $employer = User::where('id',$employer_id)->first();
-        
-        $mailData = [
-            'employer' => $employer,
-            'user' => Auth::user(),
-            'job' => $job,
-        ];
-
-        Mail::to($employer->email)->send(new JobNotificationEmail($mailData));
-
         $message = 'You have successfully applied.';
 
         session()->flash('success',$message);
@@ -216,5 +205,32 @@ class JobsController extends Controller
             'status' => true,
         ]);
 
+    }
+
+    public function downloadApplicantCv($applicationId) {
+        $application = JobApplication::where('id', $applicationId)->with('job', 'user')->first();
+
+        if ($application == null) {
+            return redirect()->back()->with('error', 'Application not found');
+        }
+
+        // Check if the current user is the owner of the job
+        if (Auth::user()->id != $application->job->user_id) {
+            return redirect()->back()->with('error', 'Unauthorized access');
+        }
+
+        $user = $application->user;
+
+        if ($user->cv == null) {
+            return redirect()->back()->with('error', 'CV not found');
+        }
+
+        $filePath = storage_path('app/public/' . $user->cv);
+        
+        if (!file_exists($filePath)) {
+             return redirect()->back()->with('error', 'CV file not found');
+        }
+
+        return response()->file($filePath);
     }
 }

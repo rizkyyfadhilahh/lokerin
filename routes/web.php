@@ -14,11 +14,7 @@ Route::get('/jobs',[JobsController::class,'index'])->name('jobs');
 Route::get('/jobs/detail/{id}',[JobsController::class,'detail'])->name('jobDetail');
 Route::post('/apply-job',[JobsController::class,'applyJob'])->name('applyJob');
 Route::post('/save-job',[JobsController::class,'saveJob'])->name('saveJob');
-
-Route::get('/forgot-password',[AccountController::class,'forgotPassword'])->name('account.forgotPassword');
-Route::post('/process-forgot-password',[AccountController::class,'processForgotPassword'])->name('account.processForgotPassword');
-Route::get('/reset-password/{token}',[AccountController::class,'resetPassword'])->name('account.resetPassword');
-Route::post('/process-reset-password',[AccountController::class,'processResetPassword'])->name('account.processResetPassword');
+Route::get('/download-applicant-cv/{applicationId}',[JobsController::class,'downloadApplicantCv'])->name('downloadApplicantCv')->middleware('auth');
 
 
 Route::group(['prefix' => 'admin','middleware' => 'checkRole'], function(){
@@ -49,6 +45,7 @@ Route::group(['prefix' => 'account'], function(){
     Route::group(['middleware' => 'auth'], function(){
         Route::get('/profile',[AccountController::class,'profile'])->name('account.profile');
         Route::put('/update-profile',[AccountController::class,'updateProfile'])->name('account.updateProfile');
+        Route::get('/download-cv',[AccountController::class,'downloadCv'])->name('account.downloadCv');
         Route::get('/logout',[AccountController::class,'logout'])->name('account.logout');   
         Route::post('/update-profile-pic',[AccountController::class,'updateProfilePic'])->name('account.updateProfilePic');     
         Route::get('/create-job',[AccountController::class,'createJob'])->name('account.createJob');   
